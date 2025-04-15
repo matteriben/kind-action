@@ -219,6 +219,7 @@ jobs:
               exit 1
             fi
 
+            docker context ls
             docker buildx ls
             docker run --privileged --rm tonistiigi/binfmt --install all
             docker buildx ls
