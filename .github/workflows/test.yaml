@@ -219,8 +219,8 @@ jobs:
               exit 1
             fi
 
-            docker pull busybox
-            docker tag busybox $LOCAL_REGISTRY/localbusybox
+            echo FROM busybox > Dockerfile
+            docker buildx -t $LOCAL_REGISTRY/localbusybox .
             docker push $LOCAL_REGISTRY/localbusybox
 
             kubectl create job test --image=$LOCAL_REGISTRY/localbusybox
