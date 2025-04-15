@@ -229,6 +229,9 @@ jobs:
             fi
 
             docker ps
+            echo ---
+            docker inspect chart-testing-control-plane
+            echo ---
             docker context ls
             docker buildx ls
             docker run --privileged --rm tonistiigi/binfmt --install all
