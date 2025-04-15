@@ -210,6 +210,7 @@ jobs:
           env:
             LOCAL_REGISTRY: ${{ steps.kind.outputs.LOCAL_REGISTRY }}
           run: |
+            set -x
             kubectl cluster-info
             kubectl get storageclass standard
 
@@ -224,6 +225,8 @@ jobs:
 
             kubectl create job test --image=$LOCAL_REGISTRY/localbusybox
             kubectl wait --for=condition=complete --timeout=30s job/test
+            kubectl describe job test
+            kubectl get job test -o yaml
 
   test-with-registry-and-delete-enabled:
       runs-on: ubuntu-latest
