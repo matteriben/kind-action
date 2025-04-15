@@ -222,6 +222,10 @@ jobs:
               exit 1
             fi
 
+            for file in $(ls /proc/sys/fs/binfmt_misc/qemu-*); do
+              cat ${file}
+            done
+
             echo FROM busybox > Dockerfile
             docker buildx build -t $LOCAL_REGISTRY/localbusybox --platform linux/amd64,linux/arm64 --push .
 
