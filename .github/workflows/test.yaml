@@ -223,6 +223,7 @@ jobs:
             docker buildx ls
             docker run --privileged --rm tonistiigi/binfmt --install all
             docker buildx ls
+            docker buildx inspect default
             echo FROM busybox > Dockerfile
             docker buildx build -t $LOCAL_REGISTRY/localbusybox --platform linux/amd64 --push .
             docker buildx build -t $LOCAL_REGISTRY/localbusybox --platform linux/arm64 --push .
