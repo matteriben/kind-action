@@ -224,6 +224,51 @@ jobs:
             kubectl create job test --image=$LOCAL_REGISTRY/localbusybox
             kubectl wait --for=condition=complete --timeout=30s job/test
 
+  test-with-registry-using-multiplatform-build:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+        - name: Create kind cluster with registry
+          id: kind
+          uses: ./
+          with:
+            registry: true
+            registry_name: custom-registry
+            registry_port: 5000
+
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@v3
+
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3
+          with:
+            buildkitd-config-inline: |
+              [registry."custom-registry:5000"]
+                http = true
+            driver-opts: |
+              network=container:custom-registry
+
+        - name: Test
+          env:
+            LOCAL_REGISTRY: ${{ steps.kind.outputs.LOCAL_REGISTRY }}
+          run: |
+            set -x
+            kubectl cluster-info
+            kubectl get storageclass standard
+
+            if [[ -z "$(docker ps --filter "name=custom-registry" --format "{{.ID}}")" ]]; then
+              echo "Registry is not present"
+              exit 1
+            fi
+
+            echo FROM busybox > Dockerfile
+            docker buildx build -t $LOCAL_REGISTRY/localbusybox --platform linux/amd64,linux/arm64 --push .
+
+            kubectl create job test --image=$LOCAL_REGISTRY/localbusybox
+            kubectl wait --for=condition=complete --timeout=30s job/test
+
   test-with-registry-and-delete-enabled:
       runs-on: ubuntu-latest
       steps:
