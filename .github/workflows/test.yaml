@@ -204,7 +204,43 @@ jobs:
           with:
             registry: true
             registry_name: custom-registry
+            registry_port: 5001
+
+        - name: Test
+          env:
+            LOCAL_REGISTRY: ${{ steps.kind.outputs.LOCAL_REGISTRY }}
+          run: |
+            kubectl cluster-info
+            kubectl get storageclass standard
+
+            if [[ -z "$(docker ps --filter "name=custom-registry" --format "{{.ID}}")" ]]; then
+              echo "Registry is not present"
+              exit 1
+            fi
+
+            docker pull busybox
+            docker tag busybox $LOCAL_REGISTRY/localbusybox
+            docker push $LOCAL_REGISTRY/localbusybox
+
+            kubectl create job test --image=$LOCAL_REGISTRY/localbusybox
+            kubectl wait --for=condition=complete --timeout=30s job/test
+
+  test-with-registry-using-multiplatform-build:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+        - name: Create kind cluster with registry
+          id: kind
+          uses: ./
+          with:
+            registry: true
+            registry_name: custom-registry
             registry_port: 5000
+
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@v3
 
         - name: Set up Docker Buildx
           uses: docker/setup-buildx-action@v3
@@ -228,24 +264,11 @@ jobs:
               exit 1
             fi
 
-            docker ps
-            echo ---
-            docker inspect chart-testing-control-plane
-            echo ---
-            docker context ls
-            docker buildx ls
-            docker run --privileged --rm tonistiigi/binfmt --install all
-            docker buildx ls
-            docker buildx inspect default
             echo FROM busybox > Dockerfile
-            docker buildx build -t $LOCAL_REGISTRY/localbusybox --platform linux/amd64 --push .
-            docker buildx build -t $LOCAL_REGISTRY/localbusybox --platform linux/arm64 --push .
             docker buildx build -t $LOCAL_REGISTRY/localbusybox --platform linux/amd64,linux/arm64 --push .
 
             kubectl create job test --image=$LOCAL_REGISTRY/localbusybox
             kubectl wait --for=condition=complete --timeout=30s job/test
-            kubectl describe job test
-            kubectl get job test -o yaml
 
   test-with-registry-and-delete-enabled:
       runs-on: ubuntu-latest
