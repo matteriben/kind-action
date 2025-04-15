@@ -220,7 +220,7 @@ jobs:
             fi
 
             echo FROM busybox > Dockerfile
-            docker buildx build -t $LOCAL_REGISTRY/localbusybox --push .
+            docker buildx build -t $LOCAL_REGISTRY/localbusybox --platform linux/amd64,linux/arm64 --push .
 
             kubectl create job test --image=$LOCAL_REGISTRY/localbusybox
             kubectl wait --for=condition=complete --timeout=30s job/test
