@@ -209,6 +209,9 @@ jobs:
         - name: Set up Docker Buildx
           uses: docker/setup-buildx-action@v3
           with:
+            buildkitd-config-inline: |
+              [registry."custom-registry:5000"]
+                http = true
             driver-opts: |
               network=container:custom-registry
 
