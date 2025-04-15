@@ -223,6 +223,7 @@ jobs:
             fi
 
             docker buildx version
+            docker buildx ls
             echo FROM busybox > Dockerfile
             docker buildx build -t $LOCAL_REGISTRY/localbusybox --platform linux/amd64,linux/arm64 --push .
 
