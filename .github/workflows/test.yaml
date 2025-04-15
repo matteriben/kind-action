@@ -198,9 +198,6 @@ jobs:
         - name: Checkout
           uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-        - name: Set up QEMU
-          uses: docker/setup-qemu-action@v3
-
         - name: Create kind cluster with registry
           id: kind
           uses: ./
@@ -222,11 +219,9 @@ jobs:
               exit 1
             fi
 
-            docker buildx version
             docker buildx ls
-            docker buildx rm builder
-            docker buildx create --name builder --driver docker-container --use
-            docker buildx inspect --bootstrap
+            docker run --privileged --rm tonistiigi/binfmt --install all
+            docker buildx ls
             echo FROM busybox > Dockerfile
             docker buildx build -t $LOCAL_REGISTRY/localbusybox --platform linux/amd64,linux/arm64 --push .
 
